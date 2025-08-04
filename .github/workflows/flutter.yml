@@ -7,11 +7,11 @@ on:
     branches: [ main ]
 
 env:
-  FLUTTER_VERSION: '3.22.2'  # أحدث إصدار مستقر من Flutter
+  FLUTTER_VERSION: '3.22.2'
 
 jobs:
   setup-and-build:
-    runs-on: ubuntu-24.04  # استخدام أحدث إصدار من Ubuntu
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -19,12 +19,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate Flutter project
+        run: |
+          if [ ! -f "pubspec.yaml" ]; then
+            echo "Error: pubspec.yaml not found. This doesn't appear to be a Flutter project."
+            exit 1
+          fi
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
           cache: true
+
+      - name: Disable Flutter analytics
+        run: flutter config --no-analytics
 
       - name: Install dependencies
         run: flutter pub get
@@ -48,13 +58,14 @@ jobs:
   deploy:
     needs: setup-and-build
     runs-on: ubuntu-24.04
+    if: success()
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure Git
         run: |
-          git config --global user.name "e2-gen"
+          git config --global user.name "e2-gen
           git config --global user.email "ebrahimjein@gmail.com"
 
       - name: Add all changes
